@@ -1,7 +1,7 @@
+import lightgbm as lgb
 import numpy as np
 import polars as pl
 import pytest
-import lightgbm as lgb
 
 from groundwork.features import FEATURE_COLS
 from groundwork.model import FraudModel

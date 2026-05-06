@@ -20,9 +20,20 @@ def imports():
 
     from groundwork.features import FEATURE_COLS
     from groundwork.io import save_csv
+
     return (
-        Path, alt, lgb, logger, mo, np, os, pl,
-        roc_auc_score, train_test_split, save_csv, FEATURE_COLS,
+        Path,
+        alt,
+        lgb,
+        logger,
+        mo,
+        np,
+        os,
+        pl,
+        roc_auc_score,
+        train_test_split,
+        save_csv,
+        FEATURE_COLS,
     )
 
 
@@ -46,7 +57,9 @@ def config(mo, Path, os):
     args = mo.cli_args()
     data_path = Path(args.get("data_path") or os.environ.get("DATA_PATH") or "data")
     model_path = Path(
-        args.get("model_path") or os.environ.get("MODEL_PATH") or "models/fraud_model.txt"
+        args.get("model_path")
+        or os.environ.get("MODEL_PATH")
+        or "models/fraud_model.txt"
     )
     mo.md(
         f"""
@@ -118,7 +131,7 @@ def generate_data(np, pl, save_csv, data_path, mo):  # noqa: F811
         f"Generating **{n:,}** synthetic auto-insurance claims. "
         f"Fraud rate: **{is_fraud.mean():.1%}**"
     )
-    return claims,
+    return (claims,)
 
 
 @app.cell
@@ -130,11 +143,12 @@ def eda(claims, mo):
 
         {mo.ui.table(claims.head(20))}
 
-        **Class balance**: {fraud_rate:.1%} fraud ({int(claims["is_fraud"].sum())} / {len(claims)} claims).
+        **Class balance**: {fraud_rate:.1%} fraud
+        ({int(claims["is_fraud"].sum())} / {len(claims)} claims).
         A stratified split preserves this ratio in train and test sets.
         """
     )
-    return fraud_rate,
+    return (fraud_rate,)
 
 
 @app.cell
@@ -165,7 +179,7 @@ def train(lgb, n_estimators, num_leaves, X_train, y_train, logger, mo):
         n_estimators.value,
         num_leaves.value,
     )
-    return lgb_model,
+    return (lgb_model,)
 
 
 @app.cell
@@ -188,12 +202,15 @@ def evaluate(lgb_model, X_test, y_test, roc_auc_score, mo):
 @app.cell
 def feature_importance(lgb_model, alt, mo, FEATURE_COLS):
     importances = lgb_model.feature_importances_
-    chart_df = {"feature": FEATURE_COLS, "importance": importances.tolist()}
     chart = (
-        alt.Chart(alt.Data(values=[
-            {"feature": f, "importance": i}
-            for f, i in zip(FEATURE_COLS, importances.tolist())
-        ]))
+        alt.Chart(
+            alt.Data(
+                values=[
+                    {"feature": f, "importance": i}
+                    for f, i in zip(FEATURE_COLS, importances.tolist())
+                ]
+            )
+        )
         .mark_bar()
         .encode(
             x=alt.X("importance:Q"),
@@ -223,8 +240,8 @@ def save_model(lgb_model, model_path, mo, logger):
         f"""
         ### Model Saved
 
-        Model written to `{model_path}` in LightGBM's native text format — human-readable,
-        no pickle, no extra dependencies. Load it at inference time with
+        Model written to `{model_path}` in LightGBM's native text format —
+        human-readable, no pickle, no extra dependencies. Load it at inference time with
         `lgb.Booster(model_file=path)` using only the `lightgbm` package.
         """
     )

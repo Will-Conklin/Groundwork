@@ -17,7 +17,19 @@ def imports():
     from groundwork.features import select_features
     from groundwork.io import load_csv, save_csv
     from groundwork.model import FraudModel
-    return Path, alt, logger, mo, os, pl, select_features, load_csv, save_csv, FraudModel
+
+    return (
+        Path,
+        alt,
+        logger,
+        mo,
+        os,
+        pl,
+        select_features,
+        load_csv,
+        save_csv,
+        FraudModel,
+    )
 
 
 @app.cell
@@ -27,8 +39,8 @@ def header(mo):
         # Fraud Detection — Batch Scoring
 
         Point this notebook at a claims CSV and a trained model to score every claim
-        with a fraud probability. Drag the threshold slider to explore the precision/recall
-        trade-off — all summary stats and charts update automatically.
+        with a fraud probability. Drag the threshold slider to explore the
+        precision/recall trade-off — all summary stats and charts update automatically.
         """
     )
     return
@@ -41,10 +53,14 @@ def config(mo, Path, os):
         args.get("input_path") or os.environ.get("INPUT_PATH") or "data/claims.csv"
     )
     model_path = Path(
-        args.get("model_path") or os.environ.get("MODEL_PATH") or "models/fraud_model.txt"
+        args.get("model_path")
+        or os.environ.get("MODEL_PATH")
+        or "models/fraud_model.txt"
     )
     output_path = Path(
-        args.get("output_path") or os.environ.get("OUTPUT_PATH") or "data/predictions.csv"
+        args.get("output_path")
+        or os.environ.get("OUTPUT_PATH")
+        or "data/predictions.csv"
     )
     mo.md(
         f"""
@@ -59,9 +75,7 @@ def config(mo, Path, os):
 
 @app.cell
 def threshold_slider(mo):
-    threshold = mo.ui.slider(
-        0.1, 0.9, step=0.05, value=0.5, label="Fraud threshold"
-    )
+    threshold = mo.ui.slider(0.1, 0.9, step=0.05, value=0.5, label="Fraud threshold")
     mo.md(
         f"""
         ### Threshold
@@ -72,44 +86,43 @@ def threshold_slider(mo):
         {threshold}
         """
     )
-    return threshold,
+    return (threshold,)
 
 
 @app.cell
 def load_data(input_path, load_csv, logger, mo):
     raw_df = load_csv(input_path)
     mo.md(f"Loaded **{len(raw_df):,}** claims from `{input_path}`.")
-    return raw_df,
+    return (raw_df,)
 
 
 @app.cell
 def preprocess(raw_df, select_features):
     features_df = select_features(raw_df)
-    return features_df,
+    return (features_df,)
 
 
 @app.cell
 def load_model(model_path, FraudModel, logger):
     model = FraudModel(model_path)
-    return model,
+    return (model,)
 
 
 @app.cell
 def score(model, features_df, mo):
     fraud_scores = model.predict_proba(features_df)
     mo.md(f"Scored **{len(fraud_scores):,}** claims.")
-    return fraud_scores,
+    return (fraud_scores,)
 
 
 @app.cell
 def build_output(raw_df, fraud_scores, threshold, pl):
-    import numpy as np
 
     output_df = raw_df.with_columns(
         pl.Series("fraud_score", fraud_scores.round(4)),
         pl.Series("predicted_fraud", (fraud_scores >= threshold.value).astype(int)),
     )
-    return output_df,
+    return (output_df,)
 
 
 @app.cell
@@ -123,11 +136,15 @@ def summary(output_df, threshold, mo):
 
         Drag the threshold slider above to see these numbers update.
 
-        {mo.hstack([
-            mo.stat(label="Total claims", value=f"{total:,}"),
-            mo.stat(label="Flagged for review", value=f"{flagged:,}"),
-            mo.stat(label="Flag rate", value=f"{flag_rate:.1%}"),
-        ])}
+        {
+            mo.hstack(
+                [
+                    mo.stat(label="Total claims", value=f"{total:,}"),
+                    mo.stat(label="Flagged for review", value=f"{flagged:,}"),
+                    mo.stat(label="Flag rate", value=f"{flag_rate:.1%}"),
+                ]
+            )
+        }
         """
     )
     return
@@ -143,13 +160,9 @@ def score_chart(output_df, threshold, alt, mo):
             alt.Y("count()", title="Claims"),
         )
         .properties(title="Distribution of fraud scores")
-    ) + alt.Chart(
-        alt.Data(values=[{"threshold": threshold.value}])
-    ).mark_rule(
+    ) + alt.Chart(alt.Data(values=[{"threshold": threshold.value}])).mark_rule(
         color="red", strokeWidth=2
-    ).encode(
-        x="threshold:Q"
-    )
+    ).encode(x="threshold:Q")
     mo.md(f"### Score Distribution\n\n{mo.ui.altair_chart(chart)}")
     return
 
@@ -172,7 +185,8 @@ def save(output_df, output_path, save_csv, logger, mo):
     logger.info("Predictions written to {}", output_path)
     mo.md(
         f"Results written to `{output_path}` — each row has a `fraud_score` "
-        f"and `predicted_fraud` flag (threshold = {output_df['predicted_fraud'].mean():.1%} flagged)."
+        f"and `predicted_fraud` flag "
+        f"({output_df['predicted_fraud'].mean():.1%} flagged at this threshold)."
     )
     return
 
