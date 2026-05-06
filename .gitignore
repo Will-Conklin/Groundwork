@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# uv
+.python-version
+
+# Data and models (keep .gitkeep, ignore actual files)
+data/*.csv
+data/*.parquet
+models/*.txt
+models/*.json
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
