@@ -248,5 +248,39 @@ def save_model(lgb_model, model_path, mo, logger):
     return
 
 
+@app.cell
+def mlflow_log(lgb_model, auc, model_path, n_estimators, num_leaves, mo):
+    import mlflow
+
+    mlflow.set_experiment("fraud-detection-training")
+    with mlflow.start_run() as run:
+        mlflow.log_params(
+            {
+                "n_estimators": n_estimators.value,
+                "num_leaves": num_leaves.value,
+                "min_child_samples": 20,
+                "reg_alpha": 0.05,
+            }
+        )
+        mlflow.log_metric("auc_roc", auc)
+        mlflow.log_artifact(str(model_path), artifact_path="model")
+    mo.md(
+        f"""
+        ### MLflow Run Logged
+
+        Experiment: **fraud-detection-training**
+        Run ID: `{run.info.run_id}`
+
+        {
+            mo.callout(
+                mo.md(f"Logged `auc_roc={auc:.4f}` and model artifact to `mlruns/`."),
+                kind="info",
+            )
+        }
+        """
+    )
+    return
+
+
 if __name__ == "__main__":
     app.run()

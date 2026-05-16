@@ -191,5 +191,45 @@ def save(output_df, output_path, save_csv, logger, mo):
     return
 
 
+@app.cell
+def mlflow_log(output_df, threshold, input_path, mo):
+    import mlflow
+
+    n_total = len(output_df)
+    n_flagged = int(output_df["predicted_fraud"].sum())
+    pct_flagged = n_flagged / n_total if n_total > 0 else 0.0
+
+    mlflow.set_experiment("fraud-detection-scoring")
+    with mlflow.start_run() as run:
+        mlflow.log_param("threshold", threshold.value)
+        mlflow.log_param("input_path", str(input_path))
+        mlflow.log_metrics(
+            {
+                "total_claims": n_total,
+                "flagged_claims": n_flagged,
+                "flag_rate": pct_flagged,
+            }
+        )
+    mo.md(
+        f"""
+        ### MLflow Run Logged
+
+        Experiment: **fraud-detection-scoring**
+        Run ID: `{run.info.run_id}`
+
+        {
+            mo.callout(
+                mo.md(
+                    f"Logged `flag_rate={pct_flagged:.1%}` "
+                    f"at threshold `{threshold.value}`."
+                ),
+                kind="info",
+            )
+        }
+        """
+    )
+    return
+
+
 if __name__ == "__main__":
     app.run()
