@@ -31,6 +31,9 @@ format:
 typecheck:
     uv run mypy groundwork/
 
+scan:
+    uv run bandit -r groundwork/ -c pyproject.toml
+
 docker-build:
     docker build -f docker/Dockerfile.batch -t groundwork-batch .
 

@@ -1,4 +1,4 @@
-.PHONY: install train score notebook notebook-score test lint format typecheck docker-build docker-run mlflow-build mlflow-run
+.PHONY: install train score notebook notebook-score test lint format typecheck scan docker-build docker-run mlflow-build mlflow-run
 
 install:
 	pip install uv && uv sync --all-extras
@@ -26,6 +26,9 @@ format:
 
 typecheck:
 	uv run mypy groundwork/
+
+scan:
+	uv run bandit -r groundwork/ -c pyproject.toml
 
 docker-build:
 	docker build -f docker/Dockerfile.batch -t groundwork-batch .

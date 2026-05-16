@@ -29,6 +29,9 @@ jobs:
       - name: Type check
         run: uv run mypy groundwork/
 
+      - name: Security scan (bandit)
+        run: uv run bandit -r groundwork/ -c pyproject.toml
+
       - name: Unit tests
         run: uv run pytest tests/ -v
 
@@ -37,3 +40,20 @@ jobs:
 
       - name: Headless score
         run: uv run python notebooks/batch_score.py
+
+  lint-dockerfiles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Dockerfile.batch
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/Dockerfile.batch
+          failure-threshold: error
+
+      - name: Lint Dockerfile.mlflow
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/Dockerfile.mlflow
+          failure-threshold: error
