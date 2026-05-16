@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+
+      - name: Type check
+        run: uv run mypy groundwork/
+
+      - name: Security scan (bandit)
+        run: uv run bandit -r groundwork/ -c pyproject.toml
+
+      - name: Unit tests
+        run: uv run pytest tests/ -v
+
+      - name: Headless train
+        run: uv run python notebooks/train.py
+
+      - name: Headless score
+        run: uv run python notebooks/batch_score.py
+
+  lint-dockerfiles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Dockerfile.batch
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/Dockerfile.batch
+          failure-threshold: error
+
+      - name: Lint Dockerfile.mlflow
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/Dockerfile.mlflow
+          failure-threshold: error
