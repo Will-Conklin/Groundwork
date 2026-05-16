@@ -18,6 +18,7 @@ models/*.json
 
 # MLflow
 mlruns/
+mlflow.db
 
 # Testing
 .pytest_cache/
