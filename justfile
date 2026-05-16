@@ -39,3 +39,14 @@ docker-run:
         -v "$(pwd)/data:/app/data" \
         -v "$(pwd)/models:/app/models" \
         groundwork-batch
+
+mlflow-build:
+    docker build -f docker/Dockerfile.mlflow -t groundwork-mlflow .
+
+mlflow-run:
+    mkdir -p mlflow-data mlruns
+    docker run --rm \
+        -p 5000:5000 \
+        -v "$(pwd)/mlflow-data:/mlflow-data" \
+        -v "$(pwd)/mlruns:/mlruns" \
+        groundwork-mlflow
